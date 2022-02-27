@@ -76,10 +76,68 @@ namespace midi
           break;
         }
         case 0xff: {
-          const auto type = readU8();
+          const auto type = static_cast<MetaEventType>(readU8());
           const auto len = readVlq();
           const auto bytes = readBytes(len);
-          events.emplace_back(deltaTime, 0xff, MetaEvent{static_cast<MetaEventType>(type), bytes});
+          switch (type)
+          {
+          case MetaEventType::TextEvent: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::CopyrightNotice: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::SequenceTrackName: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::InstrumentName: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::Lyric: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::Marker: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::CuePoint: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          case MetaEventType::MidiChannelPrefix:
+            if (len != 1)
+              throw Error("Expected one byte for MidiChannelPrefix");
+            events.emplace_back(deltaTime, 0xff, static_cast<MidiChannelPrefix>(bytes[0]));
+            break;
+          case MetaEventType::EndOfTrack:
+            if (len != 0)
+              throw Error("Expected zero bytes for EndOfTrack");
+            events.emplace_back(deltaTime, 0xff, EndOfTrack{});
+            break;
+          case MetaEventType::SetTempo: {
+            if (len != 3)
+              throw Error("Expected 3 bytes for SetTempo");
+            const auto tempo =
+              static_cast<unsigned char>(bytes[0]) << 16 | static_cast<unsigned char>(bytes[1]) << 8 | static_cast<unsigned char>(bytes[2]);
+            events.emplace_back(deltaTime, 0xff, static_cast<SetTempo>(tempo));
+            break;
+          }
+          case MetaEventType::SmpteOffset: {
+            if (len == 5)
+              events.emplace_back(deltaTime,
+                                  0xff,
+                                  SmpteOffset{static_cast<uint8_t>(bytes[0]),
+                                              static_cast<uint8_t>(bytes[1]),
+                                              static_cast<uint8_t>(bytes[2]),
+                                              static_cast<uint8_t>(bytes[3]),
+                                              static_cast<uint8_t>(bytes[4])});
+            else
+              LOG("Expected 5 bytes for SmpteOffset but have got", len);
+            break;
+          }
+          case MetaEventType::TimeSignature: {
+            if (len != 4)
+              throw Error("Expected 4 bytes for TimeSignature");
+            events.emplace_back(
+              deltaTime,
+              0xff,
+              TimeSignature{
+                static_cast<uint8_t>(bytes[0]), static_cast<uint8_t>(bytes[1]), static_cast<uint8_t>(bytes[2]), static_cast<uint8_t>(bytes[3])});
+            break;
+          }
+          case MetaEventType::KeySignature: {
+            if (len != 2)
+              throw Error("Expected 2 bytes for KeySignature");
+            events.emplace_back(deltaTime, 0xff, KeySignature{static_cast<int8_t>(bytes[0]), static_cast<bool>(bytes[1])});
+            break;
+          }
+          case MetaEventType::SequencerSpecificMetaEvent: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          default: events.emplace_back(deltaTime, 0xff, MetaEvent{type, bytes}); break;
+          }
           break;
         }
         }

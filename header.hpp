@@ -1,15 +1,15 @@
 #pragma once
-#include "error.hpp"
 #include "chunk.hpp"
+#include "error.hpp"
 #include <string_view>
 #include <variant>
 
 namespace midi
 {
-  enum class Format { zero = 0, one = 1, two = 2 };
+  enum class Format : uint8_t { zero = 0, one = 1, two = 2 };
 
   using Ticks = int;
-  enum class SmpteFormat { f24 = 24, f25 = 25, f29 = 29, f30 = 30 };
+  enum class SmpteFormat : uint8_t { f24 = 24, f25 = 25, f29 = 29, f30 = 30 };
 
   struct Smpte
   {
@@ -26,7 +26,6 @@ namespace midi
     Format format;
     int ntrks;
     std::variant<Ticks, Smpte> division;
-
   };
   auto toStr(Format) -> std::string;
   auto toStr(Smpte) -> std::string;

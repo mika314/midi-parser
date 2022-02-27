@@ -5,10 +5,6 @@
 
 namespace midi
 {
-  enum class Vlq {};
-  enum class Byte {};
-  enum class Bytes {};
-
   class Chunk
   {
   public:
