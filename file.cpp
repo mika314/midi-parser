@@ -1,13 +1,11 @@
 #include "file.hpp"
-#include <fstream>
 #include <log/log.hpp>
 
 namespace midi
 {
-  File::File(const std::string &fileName)
+  File::File(std::istream &is)
     : raw([&]() {
-        std::ifstream t(fileName, std::ios::binary);
-        std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+        std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
         return str;
       }()),
       header([&]() {
@@ -21,7 +19,7 @@ namespace midi
         return Raw{raw.begin() + pos - len, raw.begin() + pos};
       }())
   {
-    for (auto i = 0; i < header.ntrks; ++i)
+    for (auto i = 0U; i < header.ntrks; ++i)
     {
       const auto chunkType = readU32();
       if (chunkType != 'MTrk')
@@ -36,13 +34,14 @@ namespace midi
         break;
       }
       pos += len;
-      if (pos > static_cast<int>(raw.size()))
+      if (pos > raw.size())
       {
         LOG("track", i, "corrupted MIDI len is too big", len);
         break;
       }
       tracks.emplace_back(Raw{raw.begin() + pos - len, raw.begin() + pos});
     }
+    raw.clear();
   }
 
   auto File::readU32() -> uint32_t
@@ -50,7 +49,7 @@ namespace midi
     auto ret = uint32_t{};
     for (auto i = 0U; i < sizeof(uint32_t); ++i)
     {
-      if (pos >= static_cast<int>(raw.size()))
+      if (pos >= raw.size())
       {
         throw Error{"unexpected end of file"};
       }
@@ -58,5 +57,14 @@ namespace midi
       ret = (ret << 8) | b;
     }
     return ret;
+  }
+
+  auto File::write(std::ostream &st) const -> void
+  {
+    auto h = header;
+    h.ntrks = tracks.size();
+    h.write(st);
+    for (const auto &track : tracks)
+      track.write(st);
   }
 } // namespace midi

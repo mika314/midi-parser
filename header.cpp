@@ -1,5 +1,6 @@
 #include "header.hpp"
 #include <log/log.hpp>
+#include <sstream>
 
 namespace midi
 {
@@ -9,15 +10,30 @@ namespace midi
         if ((d & 0x8000) == 0)
         {
           // ticks per quarter-note
-          return static_cast<int>(d);
+          return d;
         }
         else
         {
           // SMPTE
-          return Smpte{static_cast<SmpteFormat>(-static_cast<char>((d & 0Xff00) >> 8)), d & 0X00ff};
+          return Smpte{static_cast<SmpteFormat>(-static_cast<char>((d & 0Xff00) >> 8)), static_cast<Ticks>(d & 0X00ff)};
         }
       }())
   {
+  }
+
+  auto Header::write(std::ostream &st) const -> void
+  {
+    std::ostringstream ss;
+    writeU16(ss, static_cast<uint16_t>(format));
+    writeU16(ss, ntrks);
+    if (std::holds_alternative<Ticks>(division))
+      writeU16(ss, std::get<Ticks>(division));
+    else
+      writeU16(ss,
+               uint16_t{0x8000} | ((-static_cast<int8_t>(std::get<Smpte>(division).fmt)) << 8) | static_cast<int8_t>(std::get<Smpte>(division).tpf));
+    writeU32(st, 'MThd');
+    writeU32(st, ss.str().size());
+    st << ss.str();
   }
 
   auto toStr(Format v) -> std::string

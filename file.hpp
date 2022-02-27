@@ -2,6 +2,7 @@
 #include "error.hpp"
 #include "header.hpp"
 #include "track.hpp"
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -10,11 +11,12 @@ namespace midi
   class File
   {
   public:
-    File(const std::string &fileName);
+    File(std::istream &);
+    auto write(std::ostream &) const -> void;
 
   private:
     std::string raw;
-    int pos = 0;
+    size_t pos = 0;
 
   public:
     Header header;

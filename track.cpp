@@ -1,5 +1,6 @@
 #include "track.hpp"
 #include <log/log.hpp>
+#include <sstream>
 
 namespace midi
 {
@@ -24,16 +25,16 @@ namespace midi
       const auto channel = static_cast<uint8_t>(lastStatusByte & 0x0f);
       switch (lastStatusByte & 0xf0)
       {
-      case 0x80: {
-        const auto n = readU8();
-        const auto v = readU8();
-        events.emplace_back(deltaTime, channel, NoteOff{n, v});
-        break;
-      }
       case 0x90: {
         const auto n = readU8();
         const auto v = readU8();
         events.emplace_back(deltaTime, channel, NoteOn{n, v});
+        break;
+      }
+      case 0x80: {
+        const auto n = readU8();
+        const auto v = readU8();
+        events.emplace_back(deltaTime, channel, NoteOff{n, v});
         break;
       }
       case 0xa0: {
@@ -145,5 +146,208 @@ namespace midi
       }
       }
     }
+  }
+  template <class>
+  inline constexpr bool always_false_v = false;
+  auto Track::write(std::ostream &st) const -> void
+  {
+    std::ostringstream ss;
+    auto lastStatusByte = uint8_t{};
+    for (const auto &e : events)
+    {
+      const auto ch = std::get<1>(e);
+      std::visit(
+        [&](auto &&arg) {
+          using T = std::decay_t<decltype(arg)>;
+
+          if constexpr (std::is_same_v<T, NoteOn>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0x90 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            writeU8(ss, arg.note);
+            writeU8(ss, arg.vel);
+          }
+          else if constexpr (std::is_same_v<T, NoteOff>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0x80 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            writeU8(ss, arg.note);
+            writeU8(ss, arg.vel);
+          }
+          else if constexpr (std::is_same_v<T, ProgramChange>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0xc0 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            writeU8(ss, static_cast<uint8_t>(arg));
+          }
+          else if constexpr (std::is_same_v<T, ControlChange>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0xb0 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            writeU8(ss, static_cast<uint8_t>(arg.ctl));
+            writeU8(ss, arg.val);
+          }
+          else if constexpr (std::is_same_v<T, PitchBend>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0xe0 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            const auto v = static_cast<uint16_t>(arg.val * 0x2000 + 0x2000);
+            writeU8(ss, v & 0x7f);
+            writeU8(ss, (v >> 7) & 0x7f);
+          }
+          else if constexpr (std::is_same_v<T, ChannelPressure>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0xd0 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            writeU8(ss, static_cast<uint8_t>(arg));
+          }
+          else if constexpr (std::is_same_v<T, PolyKeyPressure>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            const auto statusByte = 0xa0 | ch;
+            if (lastStatusByte != statusByte)
+            {
+              writeU8(ss, statusByte);
+              lastStatusByte = statusByte;
+            }
+            writeU8(ss, arg.note);
+            writeU8(ss, arg.val);
+          }
+          else if constexpr (std::is_same_v<T, MetaEvent>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(arg.type));
+            writeVlq(ss, arg.val.size());
+            ss.write(arg.val.data(), arg.val.size());
+          }
+          else if constexpr (std::is_same_v<T, MidiChannelPrefix>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(MetaEventType::MidiChannelPrefix));
+            writeVlq(ss, 1);
+            writeU8(ss, static_cast<uint8_t>(arg));
+          }
+          else if constexpr (std::is_same_v<T, EndOfTrack>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(MetaEventType::EndOfTrack));
+            writeVlq(ss, 0);
+          }
+          else if constexpr (std::is_same_v<T, SetTempo>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(MetaEventType::SetTempo));
+            writeVlq(ss, 3);
+            {
+              const auto ch = (static_cast<uint32_t>(arg) >> 16) & 0xff;
+              writeU8(ss, ch);
+            }
+            {
+              const auto ch = (static_cast<uint32_t>(arg) >> 8) & 0xff;
+              writeU8(ss, ch);
+            }
+            {
+              const auto ch = (static_cast<uint32_t>(arg) >> 0) & 0xff;
+              writeU8(ss, ch);
+            }
+          }
+          else if constexpr (std::is_same_v<T, SmpteOffset>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(MetaEventType::SmpteOffset));
+            writeVlq(ss, 5);
+            writeU8(ss, arg.hr);
+            writeU8(ss, arg.mn);
+            writeU8(ss, arg.se);
+            writeU8(ss, arg.fr);
+            writeU8(ss, arg.ff);
+          }
+          else if constexpr (std::is_same_v<T, TimeSignature>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(MetaEventType::TimeSignature));
+            writeVlq(ss, 4);
+            writeU8(ss, arg.nn);
+            writeU8(ss, arg.dd);
+            writeU8(ss, arg.cc);
+            writeU8(ss, arg.bb);
+          }
+          else if constexpr (std::is_same_v<T, KeySignature>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xff);
+            writeU8(ss, static_cast<uint8_t>(MetaEventType::KeySignature));
+            writeVlq(ss, 2);
+            writeU8(ss, arg.sf);
+            writeU8(ss, arg.mi);
+          }
+          else if constexpr (std::is_same_v<T, SysEx>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xf0);
+            writeVlq(ss, arg.val.size());
+            ss << arg.val;
+          }
+          else if constexpr (std::is_same_v<T, SysExF7>)
+          {
+            writeVlq(ss, std::get<0>(e));
+            lastStatusByte = 0;
+            writeU8(ss, 0xf7);
+            writeVlq(ss, arg.val.size());
+            ss << arg.val;
+          }
+          else
+            static_assert(always_false_v<T>, "non-exhaustive visitor!");
+        },
+        std::get<2>(e));
+    }
+
+    writeU32(st, 'MTrk');
+    writeU32(st, ss.str().size());
+    st << ss.str();
   }
 } // namespace midi

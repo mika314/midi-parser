@@ -2,6 +2,7 @@
 #include "error.hpp"
 #include "raw.hpp"
 #include "type.hpp"
+#include <iostream>
 
 namespace midi
 {
@@ -12,7 +13,7 @@ namespace midi
 
   private:
     Raw raw;
-    int pos = 0;
+    size_t pos = 0;
 
   protected:
     auto eof() const -> bool;
@@ -22,5 +23,9 @@ namespace midi
     auto readU32() -> uint32_t;
     auto readU8() -> uint8_t;
     auto readVlq() -> uint32_t;
+    static auto writeU16(std::ostream &, uint16_t) -> void;
+    static auto writeU32(std::ostream &, uint32_t) -> void;
+    static auto writeU8(std::ostream &, uint8_t) -> void;
+    static auto writeVlq(std::ostream &, uint32_t) -> void;
   };
 } // namespace midi
