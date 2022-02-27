@@ -6,6 +6,6 @@ namespace midi
   struct ControlChange
   {
     Control ctl;
-    unsigned char val;
+    uint8_t val;
   };
 } // namespace midi

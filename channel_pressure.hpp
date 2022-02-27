@@ -2,5 +2,5 @@
 
 namespace midi
 {
-  enum class ChannelPressure : unsigned char {};
+  enum class ChannelPressure : uint8_t {};
 } // namespace midi

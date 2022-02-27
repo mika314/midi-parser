@@ -3,13 +3,13 @@ namespace midi
 {
   struct NoteOn
   {
-    unsigned char note;
-    unsigned char vel;
+    uint8_t note;
+    uint8_t vel;
   };
 
   struct NoteOff
   {
-    unsigned char note;
-    unsigned char vel;
+    uint8_t note;
+    uint8_t vel;
   };
 } // namespace midi

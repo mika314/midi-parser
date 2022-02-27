@@ -19,7 +19,7 @@ namespace midi
     auto ret = uint32_t{0};
     for (auto i = 0U; i < sizeof(uint32_t); ++i)
     {
-      const auto b = readByte();
+      const auto b = readU8();
       ret = (ret << 7) | (b & 0x7fU);
       if ((b & 0x80) == 0)
         break;
@@ -27,11 +27,11 @@ namespace midi
     return ret;
   }
 
-  auto Chunk::readByte() -> unsigned char
+  auto Chunk::readU8() -> uint8_t
   {
     if (eof())
       throw Error{"unexpected end of file"};
-    return static_cast<unsigned char>(raw[pos++]);
+    return static_cast<uint8_t>(raw[pos++]);
   }
 
   auto Chunk::readU32() -> uint32_t
@@ -39,7 +39,7 @@ namespace midi
     auto ret = uint32_t{};
     for (auto i = 0U; i < sizeof(uint32_t); ++i)
     {
-      const auto b = readByte();
+      const auto b = readU8();
       ret = (ret << 8) | b;
     }
     return ret;
@@ -50,7 +50,7 @@ namespace midi
     auto ret = uint16_t{};
     for (auto i = 0U; i < sizeof(uint16_t); ++i)
     {
-      const auto b = readByte();
+      const auto b = readU8();
       ret = (ret << 8) | b;
     }
     return ret;

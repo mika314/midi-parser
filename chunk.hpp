@@ -21,10 +21,10 @@ namespace midi
   protected:
     auto eof() const -> bool;
     auto putBack() -> void;
-    auto readByte() -> unsigned char;
     auto readBytes(int len) -> std::string;
     auto readU16() -> uint16_t;
     auto readU32() -> uint32_t;
+    auto readU8() -> uint8_t;
     auto readVlq() -> uint32_t;
   };
 } // namespace midi

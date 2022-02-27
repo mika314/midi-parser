@@ -18,7 +18,6 @@ auto main() -> int
       // LOG("ntrks", f.header.ntrks);
       // LOG("division", toStr(f.header.division));
       ++good;
-
     }
     catch (const std::runtime_error &e)
     {

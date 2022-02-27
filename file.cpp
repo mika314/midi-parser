@@ -54,7 +54,7 @@ namespace midi
       {
         throw Error{"unexpected end of file"};
       }
-      const auto b = static_cast<unsigned char>(raw[pos++]);
+      const auto b = static_cast<uint8_t>(raw[pos++]);
       ret = (ret << 8) | b;
     }
     return ret;

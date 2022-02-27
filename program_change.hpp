@@ -2,5 +2,5 @@
 
 namespace midi
 {
-  enum class ProgramChange : unsigned char {};
+  enum class ProgramChange : uint8_t {};
 }

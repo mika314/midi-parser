@@ -4,7 +4,7 @@ namespace midi
 {
   struct PolyKeyPressure
   {
-    unsigned char note;
-    unsigned char val;
+    uint8_t note;
+    uint8_t val;
   };
 } // namespace midi

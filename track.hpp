@@ -10,6 +10,6 @@ namespace midi
   {
   public:
     Track(Raw);
-    std::vector<std::tuple<uint32_t, unsigned char, Event>> events;
+    std::vector<std::tuple<uint32_t, uint8_t, Event>> events;
   };
 } // namespace midi

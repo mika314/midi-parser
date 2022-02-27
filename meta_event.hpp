@@ -2,7 +2,7 @@
 
 namespace midi
 {
-  enum class MetaEventType : unsigned char {
+  enum class MetaEventType : uint8_t {
     SequenceNumber = 0x00,
     TextEvent = 0x01,
     CopyrightNotice = 0x02,
