@@ -20,6 +20,7 @@ namespace midi
   class Header : public Chunk
   {
   public:
+    Header() = default;
     Header(Raw);
     auto write(std::ostream &) const -> void;
 

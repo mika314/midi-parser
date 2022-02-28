@@ -4,11 +4,7 @@
 namespace midi
 {
   File::File(std::istream &is)
-    : raw([&]() {
-        std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-        return str;
-      }()),
-      header([&]() {
+    : raw((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()), header([&]() {
         const auto chunkType = readU32();
         if (chunkType != 'MThd')
         {

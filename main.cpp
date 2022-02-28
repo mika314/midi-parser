@@ -5,6 +5,7 @@
 
 auto main() -> int
 {
+  auto test = midi::File{};
   using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
   auto good = 0;
   auto bad = 0;

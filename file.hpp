@@ -11,6 +11,7 @@ namespace midi
   class File
   {
   public:
+    File() = default;
     File(std::istream &);
     auto write(std::ostream &) const -> void;
 

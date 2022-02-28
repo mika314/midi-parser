@@ -89,11 +89,7 @@ namespace midi
       v >>= 7;
     }
     if (ret.empty())
-    {
-      const auto ch = char{0};
-      st.write(&ch, 1);
-      return;
-    }
+      ret += char{0};
     for (auto i = 0U; i < ret.size() - 1; ++i)
       ret[i] |= 0x80;
     st << ret;

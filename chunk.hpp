@@ -1,7 +1,6 @@
 #pragma once
 #include "error.hpp"
 #include "raw.hpp"
-#include "type.hpp"
 #include <iostream>
 
 namespace midi
@@ -9,7 +8,7 @@ namespace midi
   class Chunk
   {
   public:
-    Chunk(Raw);
+    Chunk(Raw = Raw{});
 
   private:
     Raw raw;

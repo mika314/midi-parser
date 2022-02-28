@@ -15,7 +15,7 @@ namespace midi
         else
         {
           // SMPTE
-          return Smpte{static_cast<SmpteFormat>(-static_cast<char>((d & 0Xff00) >> 8)), static_cast<Ticks>(d & 0X00ff)};
+          return Smpte{static_cast<SmpteFormat>(-static_cast<char>((d & 0Xff00) >> 8)), static_cast<Ticks>(d & 0x00ff)};
         }
       }())
   {
