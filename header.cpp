@@ -15,7 +15,7 @@ namespace midi
         else
         {
           // SMPTE
-          return Smpte{static_cast<SmpteFormat>(-static_cast<char>((d & 0Xff00) >> 8)), static_cast<Ticks>(d & 0x00ff)};
+          return Smpte{static_cast<SmpteFormat>(-static_cast<char>((d & 0xff00) >> 8)), static_cast<Ticks>(d & 0x00ff)};
         }
       }())
   {
@@ -36,7 +36,7 @@ namespace midi
     st << ss.str();
   }
 
-  auto toStr(Format v) -> std::string
+  auto toStr(Format v) -> const char *
   {
     switch (v)
     {

@@ -38,10 +38,7 @@ namespace midi
   {
     auto ret = uint32_t{};
     for (auto i = 0U; i < sizeof(uint32_t); ++i)
-    {
-      const auto b = readU8();
-      ret = (ret << 8) | b;
-    }
+      ret = (ret << 8) | readU8();
     return ret;
   }
 
@@ -49,29 +46,20 @@ namespace midi
   {
     auto ret = uint16_t{};
     for (auto i = 0U; i < sizeof(uint16_t); ++i)
-    {
-      const auto b = readU8();
-      ret = (ret << 8) | b;
-    }
+      ret = (ret << 8) | readU8();
     return ret;
   }
 
   auto Chunk::writeU16(std::ostream &st, uint16_t v) -> void
   {
     for (auto i = 0U; i < sizeof(uint16_t); ++i)
-    {
-      const auto ch = static_cast<char>((v >> ((sizeof(uint16_t) - i - 1) * 8)) & 0xff);
-      st.write(&ch, 1);
-    }
+      writeU8(st, static_cast<char>((v >> ((sizeof(uint16_t) - i - 1) * 8)) & 0xff));
   }
 
   auto Chunk::writeU32(std::ostream &st, uint32_t v) -> void
   {
     for (auto i = 0U; i < sizeof(uint32_t); ++i)
-    {
-      const auto ch = static_cast<char>((v >> ((sizeof(uint32_t) - i - 1) * 8)) & 0xff);
-      st.write(&ch, 1);
-    }
+      writeU8(st, static_cast<char>((v >> ((sizeof(uint32_t) - i - 1) * 8)) & 0xff));
   }
 
   auto Chunk::writeU8(std::ostream &st, uint8_t v) -> void

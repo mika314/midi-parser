@@ -23,47 +23,47 @@ namespace midi
         lastStatusByte = b;
       }
       const auto channel = static_cast<uint8_t>(lastStatusByte & 0x0f);
-      switch (lastStatusByte & 0xf0)
+      switch (static_cast<Status>((lastStatusByte & 0x70) >> 4))
       {
-      case 0x90: {
+      case Status::NoteOn: {
         const auto n = readU8();
         const auto v = readU8();
         events.emplace_back(deltaTime, channel, NoteOn{n, v});
         break;
       }
-      case 0x80: {
+      case Status::NoteOff: {
         const auto n = readU8();
         const auto v = readU8();
         events.emplace_back(deltaTime, channel, NoteOff{n, v});
         break;
       }
-      case 0xa0: {
+      case Status::PolyKeyPressure: {
         const auto n = readU8();
         const auto v = readU8();
         events.emplace_back(deltaTime, channel, PolyKeyPressure{n, v});
         break;
       }
-      case 0xb0: {
+      case Status::ControlChange: {
         const auto n = readU8();
         const auto v = readU8();
         events.emplace_back(deltaTime, channel, ControlChange{static_cast<Control>(n), v});
         break;
       }
-      case 0xc0: {
+      case Status::ProgramChange: {
         events.emplace_back(deltaTime, channel, static_cast<ProgramChange>(readU8()));
         break;
       }
-      case 0xd0: {
+      case Status::ChannelPressure: {
         events.emplace_back(deltaTime, channel, static_cast<ChannelPressure>(readU8()));
         break;
       }
-      case 0xe0: {
+      case Status::PitchBend: {
         const auto b1 = readU8();
         const auto b2 = readU8();
         events.emplace_back(deltaTime, channel, PitchBend{(((b2 << 7) | b1) - 0x2000) / (1.f * 0x2000)});
         break;
       }
-      case 0xf0: {
+      case Status::System: {
         switch (lastStatusByte)
         {
         case 0xf0: {
@@ -163,7 +163,7 @@ namespace midi
           if constexpr (std::is_same_v<T, NoteOn>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0x90 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::NoteOn) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);
@@ -175,7 +175,7 @@ namespace midi
           else if constexpr (std::is_same_v<T, NoteOff>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0x80 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::NoteOff) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);
@@ -187,7 +187,7 @@ namespace midi
           else if constexpr (std::is_same_v<T, ProgramChange>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0xc0 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::ProgramChange) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);
@@ -198,7 +198,7 @@ namespace midi
           else if constexpr (std::is_same_v<T, ControlChange>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0xb0 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::ControlChange) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);
@@ -210,7 +210,7 @@ namespace midi
           else if constexpr (std::is_same_v<T, PitchBend>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0xe0 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::PitchBend) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);
@@ -223,7 +223,7 @@ namespace midi
           else if constexpr (std::is_same_v<T, ChannelPressure>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0xd0 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::ChannelPressure) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);
@@ -234,7 +234,7 @@ namespace midi
           else if constexpr (std::is_same_v<T, PolyKeyPressure>)
           {
             writeVlq(ss, std::get<0>(e));
-            const auto statusByte = 0xa0 | ch;
+            const auto statusByte = 0x80 | (static_cast<uint8_t>(Status::PolyKeyPressure) << 4) | ch;
             if (lastStatusByte != statusByte)
             {
               writeU8(ss, statusByte);

@@ -29,7 +29,7 @@ namespace midi
     size_t ntrks;
     std::variant<Ticks, Smpte> division;
   };
-  auto toStr(Format) -> std::string;
+  auto toStr(Format) -> const char *;
   auto toStr(Smpte) -> std::string;
   auto toStr(SmpteFormat) -> std::string;
   auto toStr(std::variant<Ticks, Smpte>) -> std::string;
