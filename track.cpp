@@ -350,4 +350,7 @@ namespace midi
     writeU32(st, ss.str().size());
     st << ss.str();
   }
+  auto getDeltaTime(const TrackEvent &e) -> uint32_t { return std::get<0>(e); }
+  auto getChannel(const TrackEvent &e) -> uint8_t { return std::get<1>(e); }
+  auto getEvent(const TrackEvent &e) -> Event { return std::get<2>(e); }
 } // namespace midi

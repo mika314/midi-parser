@@ -31,12 +31,18 @@ auto main() -> int
         LOG("events:", trk.events.size());
         for (const auto &evnt : trk.events)
         {
-          const auto &e = std::get<2>(evnt);
-          if (std::holds_alternative<midi::NoteOn>(e))
-            continue;
-          if (std::holds_alternative<midi::NoteOff>(e))
-            continue;
-          LOG(std::to_string(std::get<0>(evnt)), std::to_string(std::get<1>(evnt)), midi::toStr(e));
+          std::visit(
+            [&](auto &&e) {
+              using T = std::decay_t<decltype(e)>;
+
+              if constexpr (std::is_same_v<T, midi::NoteOn>) {}
+              else if constexpr (std::is_same_v<T, midi::NoteOff>)
+              {
+              }
+              else
+                LOG(std::to_string(getDeltaTime(evnt)), std::to_string(getChannel(evnt)), midi::toStr(e));
+            },
+            getEvent(evnt));
         }
       }
       ++good;
