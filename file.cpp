@@ -1,5 +1,4 @@
 #include "file.hpp"
-#include <log/log.hpp>
 
 namespace midi
 {
@@ -12,7 +11,7 @@ namespace midi
         }
         const auto len = readU32();
         pos += len;
-        return Raw{raw.begin() + pos - len, raw.begin() + pos};
+        return Raw{raw.data() + pos - len, len};
       }())
   {
     for (auto i = 0U; i < header.ntrks; ++i)
@@ -20,22 +19,19 @@ namespace midi
       const auto chunkType = readU32();
       if (chunkType != 'MTrk')
       {
-        LOG("track", i, " corrupted MIDI expected MTrk");
         break;
       }
       const auto len = readU32();
       if (len >= raw.size())
       {
-        LOG("track", i, "corrupted MIDI len is too big", len);
         break;
       }
       pos += len;
       if (pos > raw.size())
       {
-        LOG("track", i, "corrupted MIDI len is too big", len);
         break;
       }
-      tracks.emplace_back(Raw{raw.begin() + pos - len, raw.begin() + pos});
+      tracks.emplace_back(Raw{raw.data() + pos - len, len});
     }
     raw.clear();
   }

@@ -1,5 +1,4 @@
 #include "header.hpp"
-#include <log/log.hpp>
 #include <sstream>
 
 namespace midi

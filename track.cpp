@@ -1,5 +1,4 @@
 #include "track.hpp"
-#include <log/log.hpp>
 #include <sstream>
 
 namespace midi
@@ -116,8 +115,6 @@ namespace midi
                                               static_cast<uint8_t>(bytes[2]),
                                               static_cast<uint8_t>(bytes[3]),
                                               static_cast<uint8_t>(bytes[4])});
-            else
-              LOG("Expected 5 bytes for SmpteOffset but have got", len);
             break;
           }
           case MetaEventType::TimeSignature: {
@@ -277,16 +274,16 @@ namespace midi
             writeU8(ss, static_cast<uint8_t>(MetaEventType::SetTempo));
             writeVlq(ss, 3);
             {
-              const auto ch = (static_cast<uint32_t>(arg) >> 16) & 0xff;
-              writeU8(ss, ch);
+              const auto ch1 = (static_cast<uint32_t>(arg) >> 16) & 0xff;
+              writeU8(ss, ch1);
             }
             {
-              const auto ch = (static_cast<uint32_t>(arg) >> 8) & 0xff;
-              writeU8(ss, ch);
+              const auto ch1 = (static_cast<uint32_t>(arg) >> 8) & 0xff;
+              writeU8(ss, ch1);
             }
             {
-              const auto ch = (static_cast<uint32_t>(arg) >> 0) & 0xff;
-              writeU8(ss, ch);
+              const auto ch1 = (static_cast<uint32_t>(arg) >> 0) & 0xff;
+              writeU8(ss, ch1);
             }
           }
           else if constexpr (std::is_same_v<T, SmpteOffset>)
